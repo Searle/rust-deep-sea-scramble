@@ -7,7 +7,6 @@ use raylib::prelude::*;
 use crate::bubbles::*;
 use crate::consts::*;
 use crate::ship::*;
-use crate::surface::*;
 use crate::surface_verts::*;
 
 use crate::BubblesManager;
@@ -94,15 +93,15 @@ impl Mines {
     pub fn add_mine(
         &mut self,
         bubbles_manager: &mut BubblesManager,
-        surface: &Surface,
+        surface_pos: Vector2,
         ship: &Ship,
     ) {
         self.mine_list.push(Mine {
             pos: Vector2 {
-                x: surface.pos.x - SURFACE_WIDTH as f32 * 0.5,
-                y: surface.pos.y,
+                x: surface_pos.x - SURFACE_WIDTH as f32 * 0.5,
+                y: surface_pos.y,
             },
-            launch_x: ship.pos.x + ship.pos.y - (WINDOW_HEIGHT as f32 - surface.pos.y),
+            launch_x: ship.pos.x + ship.pos.y - (WINDOW_HEIGHT as f32 - surface_pos.y),
             dy: 3.0,
             bubbles: bubbles_manager.add_bubbles(),
         });
@@ -112,6 +111,7 @@ impl Mines {
         for mine in self.mine_list.iter_mut() {
             mine.update(arena_x, &ship, &surface_verts, dt);
         }
+        // TODO mark bubbles as unused, or check for bubbles with one ref
         self.mine_list.retain(|mine| {
             arena_x + mine.pos.x >= -20.0 && mine.pos.y < WINDOW_HEIGHT as f32 + 20.0
         });

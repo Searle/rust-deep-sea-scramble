@@ -3,12 +3,22 @@ use std::f32;
 use raylib::prelude::*;
 
 use crate::consts::*;
-use crate::surface::*;
+use crate::water::*;
 
 pub struct SurfaceVerts {
     pub layer_a: Vec<Vector2>,
     pub layer_b: Vec<Vector2>,
     pub layer_c: Vec<Vector2>,
+}
+
+impl SurfaceVerts {
+    pub fn new() -> Self {
+        Self {
+            layer_a: vec![],
+            layer_b: vec![],
+            layer_c: vec![],
+        }
+    }
 }
 
 fn ease_in_out_quad(x: f32) -> f32 {
@@ -76,11 +86,11 @@ pub fn get_surface_verts(surfaces: &Vec<Surface>, x: f32) -> SurfaceVerts {
 
 pub fn draw_surface_verts<'a>(
     mut d: RaylibDrawHandle<'a>,
-    verticeses: &SurfaceVerts,
+    surface_verts: &SurfaceVerts,
 ) -> RaylibDrawHandle<'a> {
-    d.draw_triangle_strip(&verticeses.layer_a, Color::DARKBLUE);
-    d.draw_triangle_strip(&verticeses.layer_b, Color::MEDIUMBLUE);
-    d.draw_triangle_strip(&verticeses.layer_c, Color::LIGHTBLUE);
+    d.draw_triangle_strip(&surface_verts.layer_a, Color::DARKBLUE);
+    d.draw_triangle_strip(&surface_verts.layer_b, Color::MEDIUMBLUE);
+    d.draw_triangle_strip(&surface_verts.layer_c, Color::LIGHTBLUE);
 
     d
 }

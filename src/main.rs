@@ -1,6 +1,5 @@
 use std::f32;
 
-use rand::Rng;
 use raylib::ffi::KeyboardKey::*;
 use raylib::prelude::*;
 
@@ -8,15 +7,14 @@ mod bubbles;
 mod consts;
 mod mines;
 mod ship;
-mod surface;
 mod surface_verts;
+mod water;
 
 use bubbles::*;
 use consts::*;
 use mines::*;
 use ship::*;
-use surface::*;
-use surface_verts::*;
+use water::*;
 
 fn draw_bullet(mut d: RaylibDrawHandle, bullet_x: f32, bullet_y: f32) -> RaylibDrawHandle {
     let x = bullet_x;
@@ -41,13 +39,10 @@ fn main() {
         .title("Deep Sea Scramble!")
         .build();
 
-    let mut surfaces: Vec<Surface> = vec![Surface::new()];
-    let mut rng = rand::thread_rng();
-
     let mut arena_x = 0.0;
 
+    let mut water = Water::new();
     let mut bubbles_manager = BubblesManager::new();
-
     let mut ship = Ship::new(&mut bubbles_manager);
 
     let mut bullet_x = 0.0;
@@ -73,36 +68,15 @@ fn main() {
             }
         }
 
-        loop {
-            let surface = &surfaces[surfaces.len() - 1];
-            let surface_x = surface.pos.x;
-            if arena_x + surface_x >= WINDOW_WIDTH as f32 {
-                break;
-            }
-            let step = rng.gen_range(-1..=1);
-            let mut y = surface.pos.y + step as f32 * 50.0;
-            y = y.max(150.0).min(400.0);
-            let new_surface = Surface {
-                pos: Vector2 {
-                    x: surface_x + SURFACE_WIDTH as f32,
-                    y,
-                },
-                freq: rng.gen_range(0.0..1.0),
-                amplitude: rng.gen_range(0.0..1.0),
-            };
+        if let Some((step, surface_pos)) = water.update(arena_x) {
             if step == 0 {
-                mines.add_mine(&mut bubbles_manager, &new_surface, &ship);
+                mines.add_mine(&mut bubbles_manager, surface_pos, &ship);
             }
-            surfaces.push(new_surface);
         }
 
-        surfaces.retain(|surface| arena_x + surface.pos.x > -SURFACE_WIDTH as f32);
-
-        let surface_verts = get_surface_verts(&surfaces, arena_x);
-
-        mines.update(arena_x, &ship, &surface_verts, dt);
-        ship.update(&surface_verts);
-        bubbles_manager.update(&surface_verts, dt);
+        mines.update(arena_x, &ship, &water.surface_verts, dt);
+        ship.update(&water.surface_verts);
+        bubbles_manager.update(&water.surface_verts, dt);
 
         // Keyboard
 
@@ -126,7 +100,7 @@ fn main() {
 
         let mut d = rl.begin_drawing(&thread);
         d.clear_background(Color::LIGHTSKYBLUE);
-        d = draw_surface_verts(d, &surface_verts);
+        d = water.draw(d);
         d = bubbles_manager.draw(d);
         d = mines.draw(d, arena_x);
         d = ship.draw(d);
