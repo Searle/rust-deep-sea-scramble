@@ -4,6 +4,7 @@ use std::rc::Rc;
 use raylib::prelude::*;
 
 use crate::bubbles::*;
+use crate::bullet::*;
 use crate::consts::*;
 use crate::surface_verts::*;
 
@@ -48,6 +49,7 @@ pub fn get_ship_vertices(x: f32, y: f32) -> Vec<Vector2> {
 pub struct Ship {
     pub pos: Vector2,
     bubbles: Rc<RefCell<Bubbles>>,
+    bullet_id: usize,
     y_ofs: f32,
 }
 
@@ -59,6 +61,7 @@ impl Ship {
                 y: WINDOW_HEIGHT as f32 - 100.0,
             },
             bubbles: bubbles_manager.add_bubbles(),
+            bullet_id: 0,
             y_ofs: 0.0,
         }
     }
@@ -101,5 +104,14 @@ impl Ship {
             },
             60,
         );
+    }
+
+    pub fn start_bullet(&mut self, bullet_manager: &mut BulletManager) {
+        if bullet_manager.is_finished(self.bullet_id) {
+            self.bullet_id = bullet_manager.add_bullet(Vector2 {
+                x: self.pos.x + 15.0,
+                y: self.pos.y + 10.0,
+            });
+        }
     }
 }
