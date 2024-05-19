@@ -1,6 +1,5 @@
-use std::cell::RefCell;
+use std::collections::HashMap;
 use std::f32;
-use std::rc::Rc;
 
 use rand::Rng;
 use raylib::prelude::*;
@@ -25,36 +24,23 @@ pub struct Bubbles {
     els: Vec<Bubble>,
     dt: f32,
     next_dt: f32,
-    pub started: bool,
+    finished: bool,
 }
 
 impl Bubbles {
-    pub fn new() -> Rc<RefCell<Self>> {
-        Rc::new(RefCell::new(Self {
-            pos: Vector2 { x: 0.0, y: 0.0 },
-            num: 0,
+    pub fn new(num: usize) -> Self {
+        Self {
+            pos: Vector2::zero(),
+            num,
             els: vec![],
             dt: 0.0,
             next_dt: 0.0,
-            started: false,
-        }))
-    }
-
-    pub fn start(&mut self, pos: Vector2, num: usize) {
-        self.pos = pos;
-        self.num = num;
-        self.els.clear();
-        self.dt = 0.0;
-        self.next_dt = 0.0;
-        self.started = true;
-    }
-
-    pub fn set_pos(&mut self, pos: Vector2) {
-        self.pos = pos;
+            finished: false,
+        }
     }
 
     pub fn update(&mut self, surface_verts: &SurfaceVerts, dt: f32) {
-        if !self.started {
+        if self.finished {
             return;
         }
 
@@ -107,14 +93,16 @@ impl Bubbles {
             }
         }
         if !found_one {
-            self.started = false;
+            self.finished = true;
         }
     }
 
-    pub fn draw<'a>(&mut self, mut d: RaylibDrawHandle<'a>) -> RaylibDrawHandle<'a> {
-        for el in &self.els {
-            if el.size > 0.0 {
-                d.draw_circle(el.pos.x as i32, el.pos.y as i32, el.size, el.color);
+    pub fn draw<'a>(&self, mut d: RaylibDrawHandle<'a>) -> RaylibDrawHandle<'a> {
+        if !self.finished {
+            for el in &self.els {
+                if el.size > 0.0 {
+                    d.draw_circle_v(el.pos, el.size, el.color);
+                }
             }
         }
         d
@@ -122,31 +110,48 @@ impl Bubbles {
 }
 
 pub struct BubblesManager {
-    bubbles_list: Vec<Rc<RefCell<Bubbles>>>,
+    bubbles_map: HashMap<usize, Bubbles>,
+    next_id: usize,
 }
 
 impl BubblesManager {
     pub fn new() -> Self {
         Self {
-            bubbles_list: Vec::new(),
+            bubbles_map: HashMap::new(),
+            next_id: 0,
         }
     }
 
-    pub fn add_bubbles(&mut self) -> Rc<RefCell<Bubbles>> {
-        let bubbles = Bubbles::new();
-        self.bubbles_list.push(Rc::clone(&bubbles));
-        bubbles
+    pub fn add_bubbles(&mut self, num: usize) -> usize {
+        let bubbles = Bubbles::new(num);
+        self.next_id += 1;
+        self.bubbles_map.insert(self.next_id, bubbles);
+        self.next_id
+    }
+
+    pub fn set_pos(&mut self, id: usize, pos: Vector2) {
+        if let Some(bullet) = self.bubbles_map.get_mut(&id) {
+            bullet.pos = pos;
+        }
+    }
+
+    pub fn is_finished(&self, id: usize) -> bool {
+        self.bubbles_map
+            .get(&id)
+            .map_or(true, |bubbles| bubbles.finished)
     }
 
     pub fn update(&mut self, surface_verts: &SurfaceVerts, dt: f32) {
-        for bubbles in self.bubbles_list.iter() {
-            bubbles.borrow_mut().update(&surface_verts, dt);
+        for bubbles in self.bubbles_map.values_mut() {
+            bubbles.update(&surface_verts, dt);
         }
+
+        self.bubbles_map.retain(|_, bubbles| !bubbles.finished);
     }
 
     pub fn draw<'a>(&self, mut d: RaylibDrawHandle<'a>) -> RaylibDrawHandle<'a> {
-        for bubbles in &self.bubbles_list {
-            d = bubbles.borrow_mut().draw(d);
+        for bubbles in self.bubbles_map.values() {
+            d = bubbles.draw(d);
         }
         d
     }

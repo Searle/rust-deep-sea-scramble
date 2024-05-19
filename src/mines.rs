@@ -38,32 +38,35 @@ struct Mine {
     pos: Vector2,
     launch_x: f32,
     dy: f32,
-    bubbles: Rc<RefCell<Bubbles>>,
+    bubble_id: usize,
 }
 
 impl Mine {
-    fn update(&mut self, arena_x: f32, ship: &Ship, surface_verts: &SurfaceVerts, dt: f32) {
+    fn update(
+        &mut self,
+        arena_x: f32,
+        bubbles_manager: &mut BubblesManager,
+        ship: &Ship,
+        surface_verts: &SurfaceVerts,
+        dt: f32,
+    ) {
         if arena_x + self.pos.x < self.launch_x {
             if self.pos.y > ship.pos.y {
                 self.pos.y -= dt * 80.0;
             }
             self.dy = (self.dy * 0.995).max(0.5);
             self.pos.y += dt * 100.0 * self.dy;
-            let mut bubbles_ref = self.bubbles.borrow_mut();
-            if bubbles_ref.started {
-                bubbles_ref.set_pos(Vector2 {
+
+            if bubbles_manager.is_finished(self.bubble_id) {
+                self.bubble_id = bubbles_manager.add_bubbles(5);
+            }
+            bubbles_manager.set_pos(
+                self.bubble_id,
+                Vector2 {
                     x: arena_x + self.pos.x,
                     y: self.pos.y,
-                });
-            } else {
-                bubbles_ref.start(
-                    Vector2 {
-                        x: arena_x + self.pos.x,
-                        y: self.pos.y,
-                    },
-                    5,
-                );
-            }
+                },
+            );
         } else {
             let x = arena_x + self.pos.x;
             let index = get_surface_verts_index(&surface_verts, x);
@@ -103,15 +106,22 @@ impl Mines {
             },
             launch_x: ship.pos.x + ship.pos.y - (WINDOW_HEIGHT as f32 - surface_pos.y),
             dy: 3.0,
-            bubbles: bubbles_manager.add_bubbles(),
+            bubble_id: 0,
         });
     }
 
-    pub fn update(&mut self, arena_x: f32, ship: &Ship, surface_verts: &SurfaceVerts, dt: f32) {
+    pub fn update(
+        &mut self,
+        arena_x: f32,
+        bubbles_manager: &mut BubblesManager,
+        ship: &Ship,
+        surface_verts: &SurfaceVerts,
+        dt: f32,
+    ) {
         for mine in self.mine_list.iter_mut() {
-            mine.update(arena_x, &ship, &surface_verts, dt);
+            mine.update(arena_x, bubbles_manager, &ship, &surface_verts, dt);
         }
-        // TODO mark bubbles as unused, or check for bubbles with one ref
+
         self.mine_list.retain(|mine| {
             arena_x + mine.pos.x >= -20.0 && mine.pos.y < WINDOW_HEIGHT as f32 + 20.0
         });

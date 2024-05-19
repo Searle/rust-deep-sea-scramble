@@ -61,8 +61,14 @@ fn main() {
             }
         }
 
-        mines.update(arena_x, &ship, &water.surface_verts, dt);
-        ship.update(&water.surface_verts);
+        mines.update(
+            arena_x,
+            &mut bubbles_manager,
+            &ship,
+            &water.surface_verts,
+            dt,
+        );
+        ship.update(&mut bubbles_manager, &water.surface_verts);
         bullet_manager.update(&water.surface_verts, dt);
         bubbles_manager.update(&water.surface_verts, dt);
 
@@ -75,7 +81,7 @@ fn main() {
             ship.pos.y += 1.0;
         }
         if rl.is_key_down(KEY_SPACE) {
-            ship.start_bullet(&mut bullet_manager);
+            ship.start_bullet(&mut bubbles_manager, &mut bullet_manager);
         }
 
         // Draw

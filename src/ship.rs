@@ -48,7 +48,7 @@ pub fn get_ship_vertices(x: f32, y: f32) -> Vec<Vector2> {
 
 pub struct Ship {
     pub pos: Vector2,
-    bubbles: Rc<RefCell<Bubbles>>,
+    bubbles_id: usize,
     bullet_id: usize,
     y_ofs: f32,
 }
@@ -60,13 +60,13 @@ impl Ship {
                 x: 100.0,
                 y: WINDOW_HEIGHT as f32 - 100.0,
             },
-            bubbles: bubbles_manager.add_bubbles(),
+            bubbles_id: 0,
             bullet_id: 0,
             y_ofs: 0.0,
         }
     }
 
-    pub fn update(&mut self, surface_verts: &SurfaceVerts) {
+    pub fn update(&mut self, bubbles_manager: &mut BubblesManager, surface_verts: &SurfaceVerts) {
         let ship_index = get_surface_verts_index(&surface_verts, self.pos.x);
         self.y_ofs = surface_verts.layer_c[ship_index].y - surface_verts.layer_b[ship_index].y;
 
@@ -81,13 +81,13 @@ impl Ship {
             self.pos.y -= diff.min(2.0);
         }
 
-        {
-            let mut ship_bubbles_ref = self.bubbles.borrow_mut();
-            ship_bubbles_ref.set_pos(Vector2 {
+        bubbles_manager.set_pos(
+            self.bubbles_id,
+            Vector2 {
                 x: self.pos.x + 10.0,
                 y: self.pos.y,
-            });
-        }
+            },
+        );
     }
 
     pub fn draw<'a>(&mut self, mut d: RaylibDrawHandle<'a>) -> RaylibDrawHandle<'a> {
@@ -96,22 +96,17 @@ impl Ship {
         d
     }
 
-    pub fn start_bubbles(&mut self) {
-        self.bubbles.borrow_mut().start(
-            Vector2 {
-                x: self.pos.x + 10.0,
-                y: self.pos.y,
-            },
-            60,
-        );
-    }
-
-    pub fn start_bullet(&mut self, bullet_manager: &mut BulletManager) {
+    pub fn start_bullet(
+        &mut self,
+        bubbles_manager: &mut BubblesManager,
+        bullet_manager: &mut BulletManager,
+    ) {
         if bullet_manager.is_finished(self.bullet_id) {
             self.bullet_id = bullet_manager.add_bullet(Vector2 {
                 x: self.pos.x + 15.0,
                 y: self.pos.y + 10.0,
             });
+            self.bubbles_id = bubbles_manager.add_bubbles(20);
         }
     }
 }
