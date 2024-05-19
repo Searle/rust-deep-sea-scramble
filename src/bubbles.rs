@@ -1,9 +1,9 @@
-use std::collections::HashMap;
 use std::f32;
 
 use rand::Rng;
 use raylib::prelude::*;
 
+use crate::entity::Entity;
 use crate::surface_verts::*;
 
 struct Bubble {
@@ -109,50 +109,20 @@ impl Bubbles {
     }
 }
 
-pub struct BubblesManager {
-    bubbles_map: HashMap<usize, Bubbles>,
-    next_id: usize,
-}
-
-impl BubblesManager {
-    pub fn new() -> Self {
-        Self {
-            bubbles_map: HashMap::new(),
-            next_id: 0,
-        }
+impl Entity for Bubbles {
+    fn update(&mut self, surface_verts: &SurfaceVerts, dt: f32) {
+        self.update(surface_verts, dt);
     }
 
-    pub fn add_bubbles(&mut self, num: usize) -> usize {
-        let bubbles = Bubbles::new(num);
-        self.next_id += 1;
-        self.bubbles_map.insert(self.next_id, bubbles);
-        self.next_id
+    fn draw<'a>(&self, d: RaylibDrawHandle<'a>) -> RaylibDrawHandle<'a> {
+        self.draw(d)
     }
 
-    pub fn set_pos(&mut self, id: usize, pos: Vector2) {
-        if let Some(bullet) = self.bubbles_map.get_mut(&id) {
-            bullet.pos = pos;
-        }
+    fn is_finished(&self) -> bool {
+        self.finished
     }
 
-    pub fn is_finished(&self, id: usize) -> bool {
-        self.bubbles_map
-            .get(&id)
-            .map_or(true, |bubbles| bubbles.finished)
-    }
-
-    pub fn update(&mut self, surface_verts: &SurfaceVerts, dt: f32) {
-        for bubbles in self.bubbles_map.values_mut() {
-            bubbles.update(&surface_verts, dt);
-        }
-
-        self.bubbles_map.retain(|_, bubbles| !bubbles.finished);
-    }
-
-    pub fn draw<'a>(&self, mut d: RaylibDrawHandle<'a>) -> RaylibDrawHandle<'a> {
-        for bubbles in self.bubbles_map.values() {
-            d = bubbles.draw(d);
-        }
-        d
+    fn set_pos(&mut self, pos: Vector2) {
+        self.pos = pos;
     }
 }

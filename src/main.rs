@@ -1,11 +1,13 @@
 use std::f32;
 
+use entity::EntityManager;
 use raylib::ffi::KeyboardKey::*;
 use raylib::prelude::*;
 
 mod bubbles;
 mod bullet;
 mod consts;
+mod entity;
 mod mines;
 mod ship;
 mod surface_verts;
@@ -44,8 +46,8 @@ fn main() {
     let mut arena_x = 0.0;
 
     let mut water = Water::new();
-    let mut bubbles_manager = BubblesManager::new();
-    let mut bullet_manager = BulletManager::new();
+    let mut bubbles_manager: EntityManager<Bubbles> = EntityManager::new();
+    let mut bullet_manager: EntityManager<Bullet> = EntityManager::new();
     let mut ship = Ship::new(&mut bubbles_manager);
 
     let mut mines = Mines::new();
@@ -57,7 +59,7 @@ fn main() {
 
         if let Some((step, surface_pos)) = water.update(arena_x) {
             if step == 0 {
-                mines.add_mine(&mut bubbles_manager, surface_pos, &ship);
+                mines.add_mine(surface_pos, &ship);
             }
         }
 

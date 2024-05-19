@@ -1,15 +1,12 @@
-use std::cell::RefCell;
 use std::f32;
-use std::rc::Rc;
 
 use raylib::prelude::*;
 
 use crate::bubbles::*;
 use crate::consts::*;
+use crate::entity::EntityManager;
 use crate::ship::*;
 use crate::surface_verts::*;
-
-use crate::BubblesManager;
 
 fn get_mine_vertices(x: f32, y: f32) -> Vec<Vector2> {
     vec![
@@ -45,7 +42,7 @@ impl Mine {
     fn update(
         &mut self,
         arena_x: f32,
-        bubbles_manager: &mut BubblesManager,
+        bubbles_manager: &mut EntityManager<Bubbles>,
         ship: &Ship,
         surface_verts: &SurfaceVerts,
         dt: f32,
@@ -58,7 +55,7 @@ impl Mine {
             self.pos.y += dt * 100.0 * self.dy;
 
             if bubbles_manager.is_finished(self.bubble_id) {
-                self.bubble_id = bubbles_manager.add_bubbles(5);
+                self.bubble_id = bubbles_manager.insert(Bubbles::new(5));
             }
             bubbles_manager.set_pos(
                 self.bubble_id,
@@ -93,12 +90,7 @@ impl Mines {
         }
     }
 
-    pub fn add_mine(
-        &mut self,
-        bubbles_manager: &mut BubblesManager,
-        surface_pos: Vector2,
-        ship: &Ship,
-    ) {
+    pub fn add_mine(&mut self, surface_pos: Vector2, ship: &Ship) {
         self.mine_list.push(Mine {
             pos: Vector2 {
                 x: surface_pos.x - SURFACE_WIDTH as f32 * 0.5,
@@ -113,7 +105,7 @@ impl Mines {
     pub fn update(
         &mut self,
         arena_x: f32,
-        bubbles_manager: &mut BubblesManager,
+        bubbles_manager: &mut EntityManager<Bubbles>,
         ship: &Ship,
         surface_verts: &SurfaceVerts,
         dt: f32,

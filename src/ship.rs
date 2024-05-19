@@ -6,6 +6,7 @@ use raylib::prelude::*;
 use crate::bubbles::*;
 use crate::bullet::*;
 use crate::consts::*;
+use crate::entity::EntityManager;
 use crate::surface_verts::*;
 
 pub fn get_ship_vertices(x: f32, y: f32) -> Vec<Vector2> {
@@ -54,7 +55,7 @@ pub struct Ship {
 }
 
 impl Ship {
-    pub fn new(bubbles_manager: &mut BubblesManager) -> Self {
+    pub fn new(bubbles_manager: &mut EntityManager<Bubbles>) -> Self {
         Self {
             pos: Vector2 {
                 x: 100.0,
@@ -66,7 +67,11 @@ impl Ship {
         }
     }
 
-    pub fn update(&mut self, bubbles_manager: &mut BubblesManager, surface_verts: &SurfaceVerts) {
+    pub fn update(
+        &mut self,
+        bubbles_manager: &mut EntityManager<Bubbles>,
+        surface_verts: &SurfaceVerts,
+    ) {
         let ship_index = get_surface_verts_index(&surface_verts, self.pos.x);
         self.y_ofs = surface_verts.layer_c[ship_index].y - surface_verts.layer_b[ship_index].y;
 
@@ -98,15 +103,15 @@ impl Ship {
 
     pub fn start_bullet(
         &mut self,
-        bubbles_manager: &mut BubblesManager,
-        bullet_manager: &mut BulletManager,
+        bubbles_manager: &mut EntityManager<Bubbles>,
+        bullet_manager: &mut EntityManager<Bullet>,
     ) {
         if bullet_manager.is_finished(self.bullet_id) {
-            self.bullet_id = bullet_manager.add_bullet(Vector2 {
+            self.bullet_id = bullet_manager.insert(Bullet::new(Vector2 {
                 x: self.pos.x + 15.0,
                 y: self.pos.y + 10.0,
-            });
-            self.bubbles_id = bubbles_manager.add_bubbles(20);
+            }));
+            self.bubbles_id = bubbles_manager.insert(Bubbles::new(20));
         }
     }
 }

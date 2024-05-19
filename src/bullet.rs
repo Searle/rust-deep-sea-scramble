@@ -1,9 +1,9 @@
-use std::collections::HashMap;
 use std::f32;
 
 use raylib::prelude::*;
 
 use crate::consts::*;
+use crate::entity::Entity;
 use crate::surface_verts::*;
 
 fn draw_bullet(mut d: RaylibDrawHandle, bullet_x: f32, bullet_y: f32) -> RaylibDrawHandle {
@@ -67,48 +67,20 @@ impl Bullet {
     }
 }
 
-pub struct BulletManager {
-    bullet_map: HashMap<usize, Bullet>,
-    next_id: usize,
-}
-
-impl BulletManager {
-    pub fn new() -> Self {
-        Self {
-            bullet_map: HashMap::new(),
-            next_id: 0,
-        }
+impl Entity for Bullet {
+    fn update(&mut self, surface_verts: &SurfaceVerts, dt: f32) {
+        self.update(surface_verts, dt);
     }
 
-    pub fn add_bullet(&mut self, pos: Vector2) -> usize {
-        let bullet = Bullet::new(pos);
-        self.next_id += 1;
-        self.bullet_map.insert(self.next_id, bullet);
-        self.next_id
+    fn draw<'a>(&self, d: RaylibDrawHandle<'a>) -> RaylibDrawHandle<'a> {
+        self.draw(d)
     }
 
-    pub fn remove_bullet(&mut self, id: usize) {
-        self.bullet_map.remove(&id);
+    fn is_finished(&self) -> bool {
+        self.finished
     }
 
-    pub fn is_finished(&self, id: usize) -> bool {
-        self.bullet_map
-            .get(&id)
-            .map_or(true, |bullet| bullet.finished)
-    }
-
-    pub fn update(&mut self, surface_verts: &SurfaceVerts, dt: f32) {
-        for bullet in self.bullet_map.values_mut() {
-            bullet.update(&surface_verts, dt);
-        }
-
-        self.bullet_map.retain(|_, bullet| !bullet.finished);
-    }
-
-    pub fn draw<'a>(&self, mut d: RaylibDrawHandle<'a>) -> RaylibDrawHandle<'a> {
-        for bullet in self.bullet_map.values() {
-            d = bullet.draw(d);
-        }
-        d
+    fn set_pos(&mut self, pos: Vector2) {
+        self.pos = pos;
     }
 }
