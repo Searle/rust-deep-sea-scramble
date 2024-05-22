@@ -2,10 +2,7 @@ use std::collections::HashMap;
 
 use raylib::prelude::*;
 
-use crate::surface_verts::*;
-
 pub trait Entity {
-    fn update(&mut self, surface_verts: &SurfaceVerts, dt: f32);
     fn draw<'a>(&self, d: RaylibDrawHandle<'a>) -> RaylibDrawHandle<'a>;
     fn is_finished(&self) -> bool;
     fn set_pos(&mut self, pos: Vector2);
@@ -30,19 +27,23 @@ impl<T: Entity> EntityManager<T> {
         self.last_id
     }
 
-    pub fn remove(&mut self, id: usize) {
-        self.entities.remove(&id);
-    }
+    // Unused
+    // pub fn remove(&mut self, id: usize) {
+    //     self.entities.remove(&id);
+    // }
 
-    pub fn update(&mut self, surface_verts: &SurfaceVerts, dt: f32) {
+    pub fn update<F>(&mut self, mut closure: F)
+    where
+        F: FnMut(&mut T),
+    {
         for entity in self.entities.values_mut() {
-            entity.update(surface_verts, dt);
+            closure(entity);
         }
 
         self.entities.retain(|_, entity| !entity.is_finished());
     }
 
-    pub fn draw<'a>(&self, mut d: RaylibDrawHandle<'a>) -> RaylibDrawHandle<'a> {
+    pub fn draw<'d>(&self, mut d: RaylibDrawHandle<'d>) -> RaylibDrawHandle<'d> {
         for entity in self.entities.values() {
             d = entity.draw(d);
         }

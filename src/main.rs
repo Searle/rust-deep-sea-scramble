@@ -1,6 +1,3 @@
-use std::f32;
-
-use entity::EntityManager;
 use raylib::ffi::KeyboardKey::*;
 use raylib::prelude::*;
 
@@ -8,7 +5,7 @@ mod bubbles;
 mod bullet;
 mod consts;
 mod entity;
-mod mines;
+mod mine;
 mod ship;
 mod surface_verts;
 mod water;
@@ -16,26 +13,9 @@ mod water;
 use bubbles::*;
 use bullet::*;
 use consts::*;
-use mines::*;
+use mine::*;
 use ship::*;
 use water::*;
-
-fn draw_bullet(mut d: RaylibDrawHandle, bullet_x: f32, bullet_y: f32) -> RaylibDrawHandle {
-    let x = bullet_x;
-    let y = bullet_y;
-
-    if x > 0.0 {
-        let vertices = vec![
-            Vector2 { x: x, y: y - 5.0 }, // Top vertex
-            Vector2 { x: x - 5.0, y: y }, // Left vertex
-            Vector2 { x: x + 5.0, y: y }, // Right vertex
-            Vector2 { x: x, y: y + 5.0 }, // Bottom vertex
-        ];
-
-        d.draw_triangle_strip(&vertices, Color::LIGHTGREEN);
-    }
-    d
-}
 
 fn main() {
     let (mut rl, thread) = raylib::init()
@@ -46,36 +26,34 @@ fn main() {
     let mut arena_x = 0.0;
 
     let mut water = Water::new();
-    let mut bubbles_manager: EntityManager<Bubbles> = EntityManager::new();
-    let mut bullet_manager: EntityManager<Bullet> = EntityManager::new();
-    let mut ship = Ship::new(&mut bubbles_manager);
-
-    let mut mines = Mines::new();
+    let mut bubbles_manager = BubblesManager::new();
+    let mut bullet_manager = BulletManager::new();
+    let mut mine_manager = MineManager::new();
+    let mut ship = Ship::new();
 
     while !rl.window_should_close() {
         let dt = rl.get_frame_time();
+        arena_x -= dt * 100.0;
 
-        arena_x = arena_x - dt * 100.0;
-
+        mine_manager.update(|entity| {
+            entity.update(
+                dt,
+                arena_x,
+                &mut bubbles_manager,
+                &ship,
+                &water.surface_verts,
+            );
+        });
         if let Some((step, surface_pos)) = water.update(arena_x) {
             if step == 0 {
-                mines.add_mine(surface_pos, &ship);
+                mine_manager.insert(Mine::new(surface_pos, &ship));
             }
         }
-
-        mines.update(
-            arena_x,
-            &mut bubbles_manager,
-            &ship,
-            &water.surface_verts,
-            dt,
-        );
+        bubbles_manager.update(|bubbles| bubbles.update(dt, &water.surface_verts));
+        bullet_manager.update(|bullet| bullet.update(dt));
         ship.update(&mut bubbles_manager, &water.surface_verts);
-        bullet_manager.update(&water.surface_verts, dt);
-        bubbles_manager.update(&water.surface_verts, dt);
 
         // Keyboard
-
         if rl.is_key_down(KEY_UP) {
             ship.pos.y -= 1.0;
         }
@@ -87,13 +65,12 @@ fn main() {
         }
 
         // Draw
-
         let mut d = rl.begin_drawing(&thread);
         d.clear_background(Color::LIGHTSKYBLUE);
-        d = water.draw(d);
-        d = bullet_manager.draw(d);
-        d = bubbles_manager.draw(d);
-        d = mines.draw(d, arena_x);
+        let d = water.draw(d);
+        let d = bullet_manager.draw(d);
+        let d = bubbles_manager.draw(d);
+        let d = mine_manager.draw(d);
         ship.draw(d);
     }
 }

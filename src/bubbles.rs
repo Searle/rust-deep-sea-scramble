@@ -3,7 +3,7 @@ use std::f32;
 use rand::Rng;
 use raylib::prelude::*;
 
-use crate::entity::Entity;
+use crate::entity::{Entity, EntityManager};
 use crate::surface_verts::*;
 
 struct Bubble {
@@ -39,7 +39,7 @@ impl Bubbles {
         }
     }
 
-    pub fn update(&mut self, surface_verts: &SurfaceVerts, dt: f32) {
+    pub fn update(&mut self, dt: f32, surface_verts: &SurfaceVerts) {
         if self.finished {
             return;
         }
@@ -97,7 +97,7 @@ impl Bubbles {
         }
     }
 
-    pub fn draw<'a>(&self, mut d: RaylibDrawHandle<'a>) -> RaylibDrawHandle<'a> {
+    pub fn draw<'d>(&self, mut d: RaylibDrawHandle<'d>) -> RaylibDrawHandle<'d> {
         if !self.finished {
             for el in &self.els {
                 if el.size > 0.0 {
@@ -110,11 +110,7 @@ impl Bubbles {
 }
 
 impl Entity for Bubbles {
-    fn update(&mut self, surface_verts: &SurfaceVerts, dt: f32) {
-        self.update(surface_verts, dt);
-    }
-
-    fn draw<'a>(&self, d: RaylibDrawHandle<'a>) -> RaylibDrawHandle<'a> {
+    fn draw<'d>(&self, d: RaylibDrawHandle<'d>) -> RaylibDrawHandle<'d> {
         self.draw(d)
     }
 
@@ -126,3 +122,5 @@ impl Entity for Bubbles {
         self.pos = pos;
     }
 }
+
+pub type BubblesManager = EntityManager<Bubbles>;

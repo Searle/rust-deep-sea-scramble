@@ -4,6 +4,7 @@ use raylib::prelude::*;
 
 use crate::bubbles::*;
 use crate::consts::*;
+use crate::entity::Entity;
 use crate::entity::EntityManager;
 use crate::ship::*;
 use crate::surface_verts::*;
@@ -31,21 +32,35 @@ fn get_mine_vertices(x: f32, y: f32) -> Vec<Vector2> {
     ]
 }
 
-struct Mine {
+pub struct Mine {
     pos: Vector2,
     launch_x: f32,
     dy: f32,
     bubble_id: usize,
+    arena_x: f32,
 }
 
 impl Mine {
-    fn update(
+    pub fn new(surface_pos: Vector2, ship: &Ship) -> Self {
+        Self {
+            pos: Vector2 {
+                x: surface_pos.x - SURFACE_WIDTH as f32 * 0.5,
+                y: surface_pos.y,
+            },
+            launch_x: ship.pos.x + ship.pos.y - (WINDOW_HEIGHT as f32 - surface_pos.y),
+            dy: 3.0,
+            bubble_id: 0,
+            arena_x: 0.0,
+        }
+    }
+
+    pub fn update(
         &mut self,
+        dt: f32,
         arena_x: f32,
-        bubbles_manager: &mut EntityManager<Bubbles>,
+        bubbles_manager: &mut BubblesManager,
         ship: &Ship,
         surface_verts: &SurfaceVerts,
-        dt: f32,
     ) {
         if arena_x + self.pos.x < self.launch_x {
             if self.pos.y > ship.pos.y {
@@ -70,59 +85,28 @@ impl Mine {
             let y = surface_verts.layer_a[index].y;
             self.pos.y = y;
         }
+        self.arena_x = arena_x
     }
 
-    fn draw<'a>(&mut self, mut d: RaylibDrawHandle<'a>, arena_x: f32) -> RaylibDrawHandle<'a> {
-        let vertices = get_mine_vertices(arena_x + self.pos.x, self.pos.y);
+    fn draw<'d>(&self, mut d: RaylibDrawHandle<'d>) -> RaylibDrawHandle<'d> {
+        let vertices = get_mine_vertices(self.arena_x + self.pos.x, self.pos.y);
         d.draw_triangle_strip(&vertices, Color::DARKORANGE);
         d
     }
 }
 
-pub struct Mines {
-    mine_list: Vec<Mine>,
-}
-
-impl Mines {
-    pub fn new() -> Self {
-        Self {
-            mine_list: Vec::new(),
-        }
+impl Entity for Mine {
+    fn draw<'d>(&self, d: RaylibDrawHandle<'d>) -> RaylibDrawHandle<'d> {
+        self.draw(d)
     }
 
-    pub fn add_mine(&mut self, surface_pos: Vector2, ship: &Ship) {
-        self.mine_list.push(Mine {
-            pos: Vector2 {
-                x: surface_pos.x - SURFACE_WIDTH as f32 * 0.5,
-                y: surface_pos.y,
-            },
-            launch_x: ship.pos.x + ship.pos.y - (WINDOW_HEIGHT as f32 - surface_pos.y),
-            dy: 3.0,
-            bubble_id: 0,
-        });
+    fn is_finished(&self) -> bool {
+        false // Adjust this logic based on your requirements
     }
 
-    pub fn update(
-        &mut self,
-        arena_x: f32,
-        bubbles_manager: &mut EntityManager<Bubbles>,
-        ship: &Ship,
-        surface_verts: &SurfaceVerts,
-        dt: f32,
-    ) {
-        for mine in self.mine_list.iter_mut() {
-            mine.update(arena_x, bubbles_manager, &ship, &surface_verts, dt);
-        }
-
-        self.mine_list.retain(|mine| {
-            arena_x + mine.pos.x >= -20.0 && mine.pos.y < WINDOW_HEIGHT as f32 + 20.0
-        });
-    }
-
-    pub fn draw<'a>(&mut self, mut d: RaylibDrawHandle<'a>, arena_x: f32) -> RaylibDrawHandle<'a> {
-        for mine in self.mine_list.iter_mut() {
-            d = mine.draw(d, arena_x);
-        }
-        d
+    fn set_pos(&mut self, _pos: Vector2) {
+        // Mines do not need set_pos in this example
     }
 }
+
+pub type MineManager = EntityManager<Mine>;

@@ -3,8 +3,7 @@ use std::f32;
 use raylib::prelude::*;
 
 use crate::consts::*;
-use crate::entity::Entity;
-use crate::surface_verts::*;
+use crate::entity::{Entity, EntityManager};
 
 fn draw_bullet(mut d: RaylibDrawHandle, bullet_x: f32, bullet_y: f32) -> RaylibDrawHandle {
     let x = bullet_x;
@@ -40,8 +39,8 @@ impl Bullet {
         }
     }
 
-    // TODO: use _serface_verts
-    pub fn update(&mut self, _surface_verts: &SurfaceVerts, dt: f32) {
+    // TODO: use surface_verts
+    pub fn update(&mut self, dt: f32) {
         if self.finished {
             return;
         }
@@ -59,7 +58,7 @@ impl Bullet {
         }
     }
 
-    pub fn draw<'a>(&self, mut d: RaylibDrawHandle<'a>) -> RaylibDrawHandle<'a> {
+    pub fn draw<'d>(&self, mut d: RaylibDrawHandle<'d>) -> RaylibDrawHandle<'d> {
         if !self.finished {
             d = draw_bullet(d, self.pos.x, self.pos.y);
         }
@@ -68,11 +67,7 @@ impl Bullet {
 }
 
 impl Entity for Bullet {
-    fn update(&mut self, surface_verts: &SurfaceVerts, dt: f32) {
-        self.update(surface_verts, dt);
-    }
-
-    fn draw<'a>(&self, d: RaylibDrawHandle<'a>) -> RaylibDrawHandle<'a> {
+    fn draw<'d>(&self, d: RaylibDrawHandle<'d>) -> RaylibDrawHandle<'d> {
         self.draw(d)
     }
 
@@ -84,3 +79,5 @@ impl Entity for Bullet {
         self.pos = pos;
     }
 }
+
+pub type BulletManager = EntityManager<Bullet>;

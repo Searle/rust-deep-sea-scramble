@@ -91,7 +91,6 @@ pub fn draw_surface_verts<'a>(
     d.draw_triangle_strip(&surface_verts.layer_a, Color::DARKBLUE);
     d.draw_triangle_strip(&surface_verts.layer_b, Color::MEDIUMBLUE);
     d.draw_triangle_strip(&surface_verts.layer_c, Color::LIGHTBLUE);
-
     d
 }
 
