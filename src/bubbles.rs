@@ -98,11 +98,9 @@ impl Bubbles {
     }
 
     pub fn draw<'d>(&self, mut d: RaylibDrawHandle<'d>) -> RaylibDrawHandle<'d> {
-        if !self.finished {
-            for el in &self.els {
-                if el.size > 0.0 {
-                    d.draw_circle_v(el.pos, el.size, el.color);
-                }
+        for el in &self.els {
+            if el.size > 0.0 {
+                d.draw_circle_v(el.pos, el.size, el.color);
             }
         }
         d

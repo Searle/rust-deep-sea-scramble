@@ -5,6 +5,8 @@ mod bubbles;
 mod bullet;
 mod consts;
 mod entity;
+mod fish;
+mod fish_swarm;
 mod mine;
 mod ship;
 mod surface_verts;
@@ -13,6 +15,8 @@ mod water;
 use bubbles::*;
 use bullet::*;
 use consts::*;
+use fish::*;
+use fish_swarm::*;
 use mine::*;
 use ship::*;
 use water::*;
@@ -28,8 +32,14 @@ fn main() {
     let mut water = Water::new();
     let mut bubbles_manager = BubblesManager::new();
     let mut bullet_manager = BulletManager::new();
+    let mut fish_swarm_manager = FishSwarmManager::new();
     let mut mine_manager = MineManager::new();
     let mut ship = Ship::new();
+
+    fish_swarm_manager.insert(FishSwarm::new(20));
+    fish_swarm_manager.insert(FishSwarm::new(20));
+    fish_swarm_manager.insert(FishSwarm::new(20));
+    fish_swarm_manager.insert(FishSwarm::new(20));
 
     while !rl.window_should_close() {
         let dt = rl.get_frame_time();
@@ -49,6 +59,7 @@ fn main() {
                 mine_manager.insert(Mine::new(surface_pos, &ship));
             }
         }
+        fish_swarm_manager.update(|fish_swarm| fish_swarm.update(dt, &water.surface_verts));
         bubbles_manager.update(|bubbles| bubbles.update(dt, &water.surface_verts));
         bullet_manager.update(|bullet| bullet.update(dt));
         ship.update(&mut bubbles_manager, &water.surface_verts);
@@ -68,6 +79,7 @@ fn main() {
         let mut d = rl.begin_drawing(&thread);
         d.clear_background(Color::LIGHTSKYBLUE);
         let d = water.draw(d);
+        let d = fish_swarm_manager.draw(d);
         let d = bullet_manager.draw(d);
         let d = bubbles_manager.draw(d);
         let d = mine_manager.draw(d);

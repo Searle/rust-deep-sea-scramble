@@ -59,10 +59,7 @@ impl Bullet {
     }
 
     pub fn draw<'d>(&self, mut d: RaylibDrawHandle<'d>) -> RaylibDrawHandle<'d> {
-        if !self.finished {
-            d = draw_bullet(d, self.pos.x, self.pos.y);
-        }
-        d
+        draw_bullet(d, self.pos.x, self.pos.y)
     }
 }
 

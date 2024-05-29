@@ -38,6 +38,7 @@ pub struct Mine {
     dy: f32,
     bubble_id: usize,
     arena_x: f32,
+    finished: bool,
 }
 
 impl Mine {
@@ -51,6 +52,7 @@ impl Mine {
             dy: 3.0,
             bubble_id: 0,
             arena_x: 0.0,
+            finished: false,
         }
     }
 
@@ -62,6 +64,15 @@ impl Mine {
         ship: &Ship,
         surface_verts: &SurfaceVerts,
     ) {
+        if self.finished {
+            return;
+        }
+        self.arena_x = arena_x;
+
+        if arena_x + self.pos.x < 50.0 {
+            self.finished = true;
+        }
+
         if arena_x + self.pos.x < self.launch_x {
             if self.pos.y > ship.pos.y {
                 self.pos.y -= dt * 80.0;
@@ -79,13 +90,13 @@ impl Mine {
                     y: self.pos.y,
                 },
             );
-        } else {
-            let x = arena_x + self.pos.x;
-            let index = get_surface_verts_index(&surface_verts, x);
-            let y = surface_verts.layer_a[index].y;
-            self.pos.y = y;
+            return;
         }
-        self.arena_x = arena_x
+
+        let x = arena_x + self.pos.x;
+        let index = get_surface_verts_index(&surface_verts, x);
+        let y = surface_verts.layer_a[index].y;
+        self.pos.y = y;
     }
 
     fn draw<'d>(&self, mut d: RaylibDrawHandle<'d>) -> RaylibDrawHandle<'d> {
@@ -101,11 +112,11 @@ impl Entity for Mine {
     }
 
     fn is_finished(&self) -> bool {
-        false // Adjust this logic based on your requirements
+        self.finished
     }
 
     fn set_pos(&mut self, _pos: Vector2) {
-        // Mines do not need set_pos in this example
+        // unused
     }
 }
 

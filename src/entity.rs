@@ -45,7 +45,9 @@ impl<T: Entity> EntityManager<T> {
 
     pub fn draw<'d>(&self, mut d: RaylibDrawHandle<'d>) -> RaylibDrawHandle<'d> {
         for entity in self.entities.values() {
-            d = entity.draw(d);
+            if !entity.is_finished() {
+                d = entity.draw(d);
+            }
         }
         d
     }
