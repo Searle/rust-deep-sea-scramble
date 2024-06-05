@@ -5,6 +5,7 @@ use raylib::prelude::*;
 use crate::{
     entity::{Entity, EntityManager},
     surface_verts::{get_surface_verts_index, SurfaceVerts},
+    WINDOW_HEIGHT,
 };
 
 use std::f32::consts::PI;
@@ -32,14 +33,11 @@ fn draw_fish(
     rotation: f32,
     scale: f32,
 ) -> RaylibDrawHandle {
-    let x1 = fish_x;
-    let y1 = fish_y;
-
     let pos_wobble = ((wobble * 1.0).sin() + 1.0) * 0.5;
-    let tail_wobble = ((wobble * 4.0).sin() + 1.0) * 0.5;
+    let tail_wobble = ((wobble * 30.0 + fish_x).sin() + 1.0) * 0.5;
 
-    let x = x1 + pos_wobble * scale * 0.25;
-    let y = y1 + pos_wobble * scale;
+    let x = fish_x + pos_wobble * scale * 0.25;
+    let y = fish_y + pos_wobble * scale;
 
     let vertices = vec![
         Vector2 {
@@ -100,6 +98,7 @@ pub struct Fish {
     target_pos: Vector2,
     direction: f32,
     pub target_reached: bool,
+    draw_pos_y: f32,
 }
 
 const MAX_SPEED: f32 = 40.0;
@@ -113,6 +112,7 @@ impl Fish {
             target_pos: Vector2::zero(),
             direction: 0.0,
             target_reached: true,
+            draw_pos_y: 0.0,
         }
     }
 
@@ -123,19 +123,26 @@ impl Fish {
         }
 
         let fish_index = get_surface_verts_index(&surface_verts, self.pos.x);
-        let fish_y_min = surface_verts.layer_a[fish_index].y + 30.0;
+        let surface_y = surface_verts.layer_a[fish_index].y + 30.0;
+
+        let mut dir_change_fact = 0.005;
+        if surface_y > self.target_pos.y {
+            self.target_pos.y = surface_y;
+            self.target_pos.x = self.pos.x;
+            dir_change_fact = 0.6;
+        }
 
         let dx = self.target_pos.x - self.pos.x;
         let dy = self.target_pos.y - self.pos.y;
 
         let direction = f32::atan2(dy, dx);
 
-        let mut diff = (direction - self.direction);
+        let mut diff = direction - self.direction;
         if diff.abs() > PI {
             diff = (2.0 * PI - diff.abs()) * diff.signum();
         }
 
-        self.direction += diff * 0.005; // * 0.003 + self.direction * 0.997;
+        self.direction += diff * dir_change_fact;
 
         let max_dy = MAX_SPEED * self.direction.sin();
         let max_dx = MAX_SPEED * self.direction.cos();
@@ -151,10 +158,16 @@ impl Fish {
             dy.min(max_dy.abs() * dt)
         };
 
+        let effect = ((self.pos.y - surface_y) / (WINDOW_HEIGHT as f32 - surface_y))
+            .max(0.0)
+            .min(1.0);
+        let y_surface_effect = surface_y + effect * (self.pos.y - surface_y);
+        self.draw_pos_y = self.draw_pos_y * 0.95 + y_surface_effect * 0.05;
+
         self.pos.x += dx;
         self.pos.y += dy;
-        if self.pos.y < fish_y_min {
-            self.pos.y = fish_y_min;
+        if self.pos.y + self.draw_pos_y < surface_y {
+            self.pos.y = surface_y - self.draw_pos_y;
             self.target_reached = true;
         }
 
@@ -168,15 +181,21 @@ impl Fish {
     }
 
     pub fn draw<'d>(&self, mut d: RaylibDrawHandle<'d>) -> RaylibDrawHandle<'d> {
-        /*
         d.draw_circle(
             self.target_pos.x as i32,
             self.target_pos.y as i32,
             1.0,
-            Color::RED,
+            Color::DARKGREEN,
         );
-        */
-        draw_fish(d, self.wobble, self.pos.x, self.pos.y, self.direction, 2.0)
+
+        draw_fish(
+            d,
+            self.wobble,
+            self.pos.x,
+            self.draw_pos_y,
+            self.direction,
+            2.0,
+        )
     }
 
     pub fn set_target_pos(&mut self, pos: Vector2) {

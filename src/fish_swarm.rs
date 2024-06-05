@@ -21,7 +21,7 @@ fn make_new_target_pos(pos: Vector2, range: f32) -> Vector2 {
             .min(WINDOW_WIDTH as f32 + 20.0),
         y: (pos.y + rng.gen_range(-range..range))
             .max(100.0)
-            .min(WINDOW_HEIGHT as f32 + 20.0),
+            .min(WINDOW_HEIGHT as f32 + 50.0),
     }
 }
 
@@ -52,8 +52,8 @@ impl FishSwarm {
                 self.fishes[i].update(dt, surface_verts);
                 if self.fishes[i].has_reached_target() {
                     if i == 0 {
-                        let pos = make_new_target_pos(self.fishes[i].pos, 200.0);
-                        self.fishes[i].set_target_pos(pos);
+                        let pos = make_new_target_pos(self.fishes[0].pos, 200.0);
+                        self.fishes[0].set_target_pos(pos);
                     } else {
                         let p = (i - 1) / 2;
                         let pos = make_new_target_pos(self.fishes[p].pos, 40.0);
