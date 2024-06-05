@@ -103,7 +103,7 @@ pub fn get_surface_verts_index(surface_verts: &SurfaceVerts, x: f32) -> usize {
         Err(index) => index,
     };
     if index >= surface_verts.layer_a.len() {
-        return surface_verts.layer_a.len() - 1;
+        return surface_verts.layer_a.len() - 2;
     }
     while index > 0 {
         if surface_verts.layer_a[index].x != surface_verts.layer_a[index - 1].x {

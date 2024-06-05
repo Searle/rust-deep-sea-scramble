@@ -9,19 +9,19 @@ use crate::{consts::*, Fish};
 
 pub struct FishSwarm {
     fishes: Vec<Fish>,
-    target_pos: Vector2,
+    target_x: f32,
     finished: bool,
 }
 
-fn make_new_target_pos(pos: Vector2, range: f32) -> Vector2 {
+fn make_new_target_pos(pos: Vector2, ofs_x: f32, range: f32) -> Vector2 {
     let mut rng = rand::thread_rng();
     Vector2 {
-        x: (pos.x + rng.gen_range(-range..range))
+        x: (pos.x + rng.gen_range(-range..range) - ofs_x)
             .max(-20.0)
             .min(WINDOW_WIDTH as f32 + 20.0),
         y: (pos.y + rng.gen_range(-range..range))
-            .max(100.0)
-            .min(WINDOW_HEIGHT as f32 + 50.0),
+            .max(300.0)
+            .min(WINDOW_HEIGHT as f32 + 20.0),
     }
 }
 
@@ -33,7 +33,7 @@ impl FishSwarm {
         }
         Self {
             fishes,
-            target_pos: Vector2::zero(),
+            target_x: 0.0,
             finished: false,
         }
     }
@@ -43,22 +43,26 @@ impl FishSwarm {
             return;
         }
 
-        if self.target_pos.y == 0.0 && self.target_pos.x == 0.0 {
-            self.target_pos = Vector2 { x: 100.0, y: 200.0 };
-            self.fishes[0].set_target_pos(self.target_pos);
-            self.fishes[0].set_pos(Vector2 { x: 200.0, y: 100.0 });
-        } else {
-            for i in 0..self.fishes.len() {
-                self.fishes[i].update(dt, surface_verts);
-                if self.fishes[i].has_reached_target() {
-                    if i == 0 {
-                        let pos = make_new_target_pos(self.fishes[0].pos, 200.0);
-                        self.fishes[0].set_target_pos(pos);
-                    } else {
-                        let p = (i - 1) / 2;
-                        let pos = make_new_target_pos(self.fishes[p].pos, 40.0);
-                        self.fishes[i].set_target_pos(pos);
-                    }
+        self.target_x += dt;
+        let tx = self.target_x * 4.0;
+
+        for i in 0..self.fishes.len() {
+            if self.fishes[i].pos.x == 0.0 && self.fishes[i].pos.y == 0.0 {
+                let mut rng = rand::thread_rng();
+                self.fishes[i].pos = Vector2 {
+                    x: WINDOW_WIDTH as f32 + 120.0,
+                    y: rng.gen_range(100.0..WINDOW_HEIGHT as f32),
+                }
+            }
+            self.fishes[i].update(dt, surface_verts);
+            if self.fishes[i].has_reached_target() {
+                if i == 0 {
+                    let pos = make_new_target_pos(self.fishes[0].pos, tx, 200.0);
+                    self.fishes[0].set_target_pos(pos);
+                } else {
+                    let p = (i - 1) / 2;
+                    let pos = make_new_target_pos(self.fishes[p].pos, tx, 40.0);
+                    self.fishes[i].set_target_pos(pos);
                 }
             }
         }

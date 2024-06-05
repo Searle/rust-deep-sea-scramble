@@ -34,7 +34,7 @@ fn draw_fish(
     scale: f32,
 ) -> RaylibDrawHandle {
     let pos_wobble = ((wobble * 1.0).sin() + 1.0) * 0.5;
-    let tail_wobble = ((wobble * 30.0 + fish_x).sin() + 1.0) * 0.5;
+    let tail_wobble = ((wobble * 30.0 + fish_x + fish_y).sin() + 1.0) * 0.5;
 
     let x = fish_x + pos_wobble * scale * 0.25;
     let y = fish_y + pos_wobble * scale;
