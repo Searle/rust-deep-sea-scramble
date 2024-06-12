@@ -3,9 +3,9 @@ use std::f32;
 use raylib::prelude::*;
 
 use crate::{
+    consts::WINDOW_HEIGHT,
     entity::{Entity, EntityManager},
     surface_verts::{get_surface_verts_index, SurfaceVerts},
-    WINDOW_HEIGHT,
 };
 
 use std::f32::consts::PI;
@@ -25,6 +25,13 @@ fn rotate_point(x: f32, y: f32, angle: f32, origin_x: f32, origin_y: f32) -> Vec
     }
 }
 
+const COLORS: [Color; 4] = [
+    Color::LIGHTBLUE,
+    Color::LIGHTSALMON,
+    Color::LIGHTSLATEGRAY,
+    Color::LIGHTYELLOW,
+];
+
 fn draw_fish(
     mut d: RaylibDrawHandle,
     wobble: f32,
@@ -32,6 +39,7 @@ fn draw_fish(
     fish_y: f32,
     rotation: f32,
     scale: f32,
+    fish_type: i32,
 ) -> RaylibDrawHandle {
     let pos_wobble = ((wobble * 1.0).sin() + 1.0) * 0.5;
     let tail_wobble = ((wobble * 30.0 + fish_x + fish_y).sin() + 1.0) * 0.5;
@@ -87,7 +95,10 @@ fn draw_fish(
         .map(|v| rotate_point(v.x, v.y, rotation, x, y))
         .collect();
 
-    d.draw_triangle_strip(&rotated_vertices, Color::LIGHTBLUE);
+    d.draw_triangle_strip(
+        &rotated_vertices,
+        COLORS[(fish_type % (COLORS.len() as i32)) as usize],
+    );
     d
 }
 
@@ -99,12 +110,14 @@ pub struct Fish {
     direction: f32,
     pub target_reached: bool,
     draw_pos_y: f32,
+    scale: f32,
+    fish_type: usize,
 }
 
 const MAX_SPEED: f32 = 40.0;
 
 impl Fish {
-    pub fn new(pos: Vector2) -> Self {
+    pub fn new(pos: Vector2, scale: f32, fish_type: usize) -> Self {
         Self {
             pos,
             finished: false,
@@ -113,10 +126,11 @@ impl Fish {
             direction: 0.0,
             target_reached: true,
             draw_pos_y: 0.0,
+            scale,
+            fish_type,
         }
     }
 
-    // TODO: use surface_verts
     pub fn update(&mut self, dt: f32, surface_verts: &SurfaceVerts) {
         if self.finished {
             return;
@@ -187,18 +201,25 @@ impl Fish {
     pub fn draw<'d>(&self, mut d: RaylibDrawHandle<'d>) -> RaylibDrawHandle<'d> {
         d.draw_circle(
             self.target_pos.x as i32,
-            self.target_pos.y as i32,
-            1.0,
+            (self.target_pos.y + self.draw_pos_y - self.pos.y) as i32,
+            3.0,
             Color::DARKGREEN,
         );
-
+        d.draw_line(
+            self.pos.x as i32,
+            self.draw_pos_y as i32,
+            self.target_pos.x as i32,
+            (self.target_pos.y + self.draw_pos_y - self.pos.y) as i32,
+            Color::LIGHTGREEN,
+        );
         draw_fish(
             d,
             self.wobble,
             self.pos.x,
             self.draw_pos_y,
             self.direction,
-            2.0,
+            self.scale,
+            self.fish_type as i32,
         )
     }
 

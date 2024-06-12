@@ -36,10 +36,10 @@ fn main() {
     let mut mine_manager = MineManager::new();
     let mut ship = Ship::new();
 
-    fish_swarm_manager.insert(FishSwarm::new(20));
-    fish_swarm_manager.insert(FishSwarm::new(20));
-    fish_swarm_manager.insert(FishSwarm::new(20));
-    fish_swarm_manager.insert(FishSwarm::new(20));
+    fish_swarm_manager.insert(FishSwarm::new(20, 0.0));
+    // fish_swarm_manager.insert(FishSwarm::new(20, 300.0));
+    // fish_swarm_manager.insert(FishSwarm::new(20, 600.0));
+    // fish_swarm_manager.insert(FishSwarm::new(20, 900.0));
 
     while !rl.window_should_close() {
         let dt = rl.get_frame_time();
@@ -66,7 +66,7 @@ fn main() {
             }
         });
         for _ in 0..new_swarms {
-            fish_swarm_manager.insert(FishSwarm::new(20));
+            fish_swarm_manager.insert(FishSwarm::new(20, 0.0));
         }
 
         bubbles_manager.update(|bubbles, _| bubbles.update(dt, &water.surface_verts));

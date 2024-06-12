@@ -1,16 +1,24 @@
+use lazy_static::lazy_static;
 use std::f32;
+use std::sync::atomic::{AtomicUsize, Ordering};
 
 use rand::Rng;
 use raylib::prelude::*;
 
+use crate::consts::*;
 use crate::entity::{Entity, EntityManager};
+use crate::fish::{Fish, FishManager};
 use crate::surface_verts::SurfaceVerts;
-use crate::{consts::*, Fish, FishManager};
 
 pub struct FishSwarm {
     fish_manager: FishManager,
     target_x: f32,
     finished: bool,
+    ofs_x: f32,
+}
+
+lazy_static! {
+    static ref INSTANCE_COUNT: AtomicUsize = AtomicUsize::new(0);
 }
 
 fn make_new_target_pos(pos: Vector2, ofs_x: f32, range: f32) -> Vector2 {
@@ -26,15 +34,20 @@ fn make_new_target_pos(pos: Vector2, ofs_x: f32, range: f32) -> Vector2 {
 }
 
 impl FishSwarm {
-    pub fn new(count: i32) -> Self {
+    pub fn new(count: i32, ofs_x: f32) -> Self {
+        INSTANCE_COUNT.fetch_add(1, Ordering::SeqCst);
+        let mut rng = rand::thread_rng();
         let mut fish_manager = FishManager::new();
+        let fish_scale = rng.gen_range(1.0..3.0);
+        let fish_type = INSTANCE_COUNT.load(Ordering::SeqCst);
         for _ in 0..count {
-            fish_manager.insert(Fish::new(Vector2::zero()));
+            fish_manager.insert(Fish::new(Vector2::zero(), fish_scale, fish_type));
         }
         Self {
             fish_manager,
             target_x: 0.0,
             finished: false,
+            ofs_x,
         }
     }
 
@@ -50,7 +63,7 @@ impl FishSwarm {
             if fish.pos.y == 0.0 {
                 let mut rng = rand::thread_rng();
                 fish.pos = Vector2 {
-                    x: WINDOW_WIDTH as f32 + 120.0,
+                    x: WINDOW_WIDTH as f32 + 120.0 + self.ofs_x,
                     y: rng.gen_range(100.0..WINDOW_HEIGHT as f32),
                 }
             }
