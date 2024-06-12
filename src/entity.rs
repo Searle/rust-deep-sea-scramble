@@ -32,15 +32,18 @@ impl<T: Entity> EntityManager<T> {
     //     self.entities.remove(&id);
     // }
 
-    pub fn update<F>(&mut self, mut closure: F)
+    pub fn update<F>(&mut self, mut closure: F) -> bool
     where
-        F: FnMut(&mut T),
+        F: FnMut(&mut T, i32),
     {
+        let mut i: i32 = 0;
         for entity in self.entities.values_mut() {
-            closure(entity);
+            closure(entity, i);
+            i += 1;
         }
 
         self.entities.retain(|_, entity| !entity.is_finished());
+        self.entities.len() == 0
     }
 
     pub fn draw<'d>(&self, mut d: RaylibDrawHandle<'d>) -> RaylibDrawHandle<'d> {

@@ -45,7 +45,7 @@ fn main() {
         let dt = rl.get_frame_time();
         arena_x -= dt * 100.0;
 
-        mine_manager.update(|entity| {
+        mine_manager.update(|entity, _| {
             entity.update(
                 dt,
                 arena_x,
@@ -59,9 +59,18 @@ fn main() {
                 mine_manager.insert(Mine::new(surface_pos, &ship));
             }
         }
-        fish_swarm_manager.update(|fish_swarm| fish_swarm.update(dt, &water.surface_verts));
-        bubbles_manager.update(|bubbles| bubbles.update(dt, &water.surface_verts));
-        bullet_manager.update(|bullet| bullet.update(dt));
+        let mut new_swarms = 0;
+        fish_swarm_manager.update(|fish_swarm, _| {
+            if fish_swarm.update(dt, &water.surface_verts) {
+                new_swarms += 1
+            }
+        });
+        for _ in 0..new_swarms {
+            fish_swarm_manager.insert(FishSwarm::new(20));
+        }
+
+        bubbles_manager.update(|bubbles, _| bubbles.update(dt, &water.surface_verts));
+        bullet_manager.update(|bullet, _| bullet.update(dt));
         ship.update(&mut bubbles_manager, &water.surface_verts);
 
         // Keyboard
