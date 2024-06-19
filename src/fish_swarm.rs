@@ -59,6 +59,8 @@ impl FishSwarm {
         self.target_x += dt;
         let tx = self.target_x * 4.0;
 
+        let mut poss: Vec<Vector2> = vec![];
+
         self.finished = self.fish_manager.update(|fish, i| {
             if fish.pos.y == 0.0 {
                 let mut rng = rand::thread_rng();
@@ -67,17 +69,18 @@ impl FishSwarm {
                     y: rng.gen_range(100.0..WINDOW_HEIGHT as f32),
                 }
             }
-            fish.update(dt, surface_verts);
+            fish.update(dt, surface_verts, i as usize);
             if fish.has_reached_target() {
                 if i == 0 {
                     let pos = make_new_target_pos(fish.pos, tx, 200.0);
                     fish.set_target_pos(pos);
                 } else {
-                    let p = (i - 1) / 2;
-                    let pos = make_new_target_pos(fish.pos, tx, 40.0);
+                    let p = ((i - 1) / 2) as usize;
+                    let pos = make_new_target_pos(poss[p], tx, 40.0);
                     fish.set_target_pos(pos);
                 }
             }
+            poss.push(fish.pos);
         });
 
         self.finished

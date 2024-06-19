@@ -7,34 +7,37 @@
         {
             "type": "lldb",
             "request": "launch",
-            "name": "Debug executable 'first_rust_project'",
+            "name": "Debug executable 'rust_deep_sea_scramble'",
             "cargo": {
                 "args": [
                     "build",
-                    "--bin=first_rust_project",
-                    "--package=first_rust_project"
+                    "--bin=rust_deep_sea_scramble",
+                    "--package=rust_deep_sea_scramble"
                 ],
                 "filter": {
-                    "name": "first_rust_project",
+                    "name": "rust_deep_sea_scramble",
                     "kind": "bin"
                 }
             },
             "args": [],
-            "cwd": "${workspaceFolder}"
+            "cwd": "${workspaceFolder}",
+            "env": {
+                "DISPLAY": "172.17.16.1:0.0"
+            }
         },
         {
             "type": "lldb",
             "request": "launch",
-            "name": "Debug unit tests in executable 'first_rust_project'",
+            "name": "Debug unit tests in executable 'rust_deep_sea_scramble'",
             "cargo": {
                 "args": [
                     "test",
                     "--no-run",
-                    "--bin=first_rust_project",
-                    "--package=first_rust_project"
+                    "--bin=rust_deep_sea_scramble",
+                    "--package=rust_deep_sea_scramble"
                 ],
                 "filter": {
-                    "name": "first_rust_project",
+                    "name": "rust_deep_sea_scramble",
                     "kind": "bin"
                 }
             },

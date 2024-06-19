@@ -104,15 +104,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "first_rust_project"
-version = "0.1.0"
-dependencies = [
- "lazy_static",
- "rand",
- "raylib",
-]
-
-[[package]]
 name = "fs_extra"
 version = "1.3.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -378,6 +369,15 @@ name = "regex-syntax"
 version = "0.8.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "adad44e29e4c806119491a7f06f03de4d1af22c3a680dd47f1e6e179439d1f56"
+
+[[package]]
+name = "rust_deep_sea_scramble"
+version = "0.1.0"
+dependencies = [
+ "lazy_static",
+ "rand",
+ "raylib",
+]
 
 [[package]]
 name = "rustc-hash"

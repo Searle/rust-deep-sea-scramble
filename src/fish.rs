@@ -10,6 +10,8 @@ use crate::{
 
 use std::f32::consts::PI;
 
+const DEBUG: bool = false;
+
 fn rotate_point(x: f32, y: f32, angle: f32, origin_x: f32, origin_y: f32) -> Vector2 {
     let cos_theta = angle.cos();
     let sin_theta = angle.sin();
@@ -112,6 +114,7 @@ pub struct Fish {
     draw_pos_y: f32,
     scale: f32,
     fish_type: usize,
+    fish_index: usize,
 }
 
 const MAX_SPEED: f32 = 40.0;
@@ -128,13 +131,16 @@ impl Fish {
             draw_pos_y: 0.0,
             scale,
             fish_type,
+            fish_index: 0,
         }
     }
 
-    pub fn update(&mut self, dt: f32, surface_verts: &SurfaceVerts) {
+    pub fn update(&mut self, dt: f32, surface_verts: &SurfaceVerts, index: usize) {
         if self.finished {
             return;
         }
+
+        self.fish_index = index;
 
         let fish_index = get_surface_verts_index(&surface_verts, self.pos.x);
         let surface_y = surface_verts.layer_a[fish_index].y + 30.0;
@@ -153,7 +159,7 @@ impl Fish {
 
         let mut diff = direction - self.direction;
         if diff.abs() > PI {
-            diff = (2.0 * PI - diff.abs()) * diff.signum();
+            diff = (diff.abs() - 2.0 * PI) * diff.signum();
         }
 
         self.direction += diff * dir_change_fact;
@@ -199,19 +205,27 @@ impl Fish {
     }
 
     pub fn draw<'d>(&self, mut d: RaylibDrawHandle<'d>) -> RaylibDrawHandle<'d> {
-        d.draw_circle(
-            self.target_pos.x as i32,
-            (self.target_pos.y + self.draw_pos_y - self.pos.y) as i32,
-            3.0,
-            Color::DARKGREEN,
-        );
-        d.draw_line(
-            self.pos.x as i32,
-            self.draw_pos_y as i32,
-            self.target_pos.x as i32,
-            (self.target_pos.y + self.draw_pos_y - self.pos.y) as i32,
-            Color::LIGHTGREEN,
-        );
+        if DEBUG {
+            d.draw_circle(
+                self.target_pos.x as i32,
+                (self.target_pos.y + self.draw_pos_y - self.pos.y) as i32,
+                3.0,
+                Color::DARKGREEN,
+            );
+
+            let x = self.target_pos.x as i32;
+            let y = (self.target_pos.y + self.draw_pos_y - self.pos.y) as i32;
+            let n: String = self.fish_index.to_string();
+            d.draw_text(&n, x, y, 10, Color::WHITE);
+
+            d.draw_line(
+                self.pos.x as i32,
+                self.draw_pos_y as i32,
+                self.target_pos.x as i32,
+                (self.target_pos.y + self.draw_pos_y - self.pos.y) as i32,
+                Color::LIGHTGREEN,
+            );
+        }
         draw_fish(
             d,
             self.wobble,

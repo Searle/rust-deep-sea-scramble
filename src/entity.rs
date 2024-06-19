@@ -27,6 +27,10 @@ impl<T: Entity> EntityManager<T> {
         self.last_id
     }
 
+    pub fn get(&mut self, id: usize) -> &T {
+        self.entities.get_mut(&id).unwrap()
+    }
+
     // Unused
     // pub fn remove(&mut self, id: usize) {
     //     self.entities.remove(&id);

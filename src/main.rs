@@ -37,9 +37,9 @@ fn main() {
     let mut ship = Ship::new();
 
     fish_swarm_manager.insert(FishSwarm::new(20, 0.0));
-    // fish_swarm_manager.insert(FishSwarm::new(20, 300.0));
-    // fish_swarm_manager.insert(FishSwarm::new(20, 600.0));
-    // fish_swarm_manager.insert(FishSwarm::new(20, 900.0));
+    fish_swarm_manager.insert(FishSwarm::new(20, 300.0));
+    fish_swarm_manager.insert(FishSwarm::new(20, 600.0));
+    fish_swarm_manager.insert(FishSwarm::new(20, 900.0));
 
     while !rl.window_should_close() {
         let dt = rl.get_frame_time();

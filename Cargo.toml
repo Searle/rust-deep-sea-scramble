@@ -1,5 +1,5 @@
 [package]
-name = "first_rust_project"
+name = "rust_deep_sea_scramble"
 version = "0.1.0"
 edition = "2021"
 
