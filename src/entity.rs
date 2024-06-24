@@ -27,8 +27,8 @@ impl<T: Entity> EntityManager<T> {
         self.last_id
     }
 
-    pub fn get(&mut self, id: usize) -> &T {
-        self.entities.get_mut(&id).unwrap()
+    pub fn head(&mut self) -> Option<&mut T> {
+        self.entities.values_mut().next()
     }
 
     // Unused

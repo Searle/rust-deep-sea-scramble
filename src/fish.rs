@@ -185,7 +185,7 @@ impl Fish {
         self.draw_pos_y = self.draw_pos_y * 0.95 + y_surface_effect * 0.05;
 
         self.pos.x += dx;
-        if self.pos.x <= -20.0 {
+        if self.pos.x <= -90.0 {
             self.finished = true;
         }
 

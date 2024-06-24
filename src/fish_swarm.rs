@@ -12,29 +12,28 @@ use crate::surface_verts::SurfaceVerts;
 
 pub struct FishSwarm {
     fish_manager: FishManager,
-    target_x: f32,
     finished: bool,
-    ofs_x: f32,
+    relaxed: i32,
 }
 
 lazy_static! {
     static ref INSTANCE_COUNT: AtomicUsize = AtomicUsize::new(0);
 }
 
-fn make_new_target_pos(pos: Vector2, ofs_x: f32, range: f32) -> Vector2 {
+fn make_new_target_pos(pos: Vector2, rx0: f32, rx1: f32, ry0: f32, ry1: f32) -> Vector2 {
     let mut rng = rand::thread_rng();
     Vector2 {
-        x: (pos.x + rng.gen_range(-range..range) - ofs_x)
-            .max(-30.0)
+        x: (pos.x + rng.gen_range(rx0..rx1))
+            .max(-100.0)
             .min(WINDOW_WIDTH as f32 + 20.0),
-        y: (pos.y + rng.gen_range(-range..range))
+        y: (pos.y + rng.gen_range(ry0..ry1))
             .max(300.0)
             .min(WINDOW_HEIGHT as f32 + 20.0),
     }
 }
 
 impl FishSwarm {
-    pub fn new(count: i32, ofs_x: f32) -> Self {
+    pub fn new(count: i32, relaxed: i32) -> Self {
         INSTANCE_COUNT.fetch_add(1, Ordering::SeqCst);
         let mut rng = rand::thread_rng();
         let mut fish_manager = FishManager::new();
@@ -45,9 +44,8 @@ impl FishSwarm {
         }
         Self {
             fish_manager,
-            target_x: 0.0,
             finished: false,
-            ofs_x,
+            relaxed,
         }
     }
 
@@ -56,28 +54,26 @@ impl FishSwarm {
             return true;
         }
 
-        self.target_x += dt;
-        let tx = self.target_x * 4.0;
-
         let mut poss: Vec<Vector2> = vec![];
 
         self.finished = self.fish_manager.update(|fish, i| {
             if fish.pos.y == 0.0 {
                 let mut rng = rand::thread_rng();
                 fish.pos = Vector2 {
-                    x: WINDOW_WIDTH as f32 + 120.0 + self.ofs_x,
+                    x: WINDOW_WIDTH as f32 + 20.0 + (i as f32) * 10.0,
                     y: rng.gen_range(100.0..WINDOW_HEIGHT as f32),
                 }
             }
             fish.update(dt, surface_verts, i as usize);
             if fish.has_reached_target() {
                 if i == 0 {
-                    let pos = make_new_target_pos(fish.pos, tx, 200.0);
-                    fish.set_target_pos(pos);
+                    fish.set_target_pos(make_new_target_pos(fish.pos, -40.0, -1.0, -40.0, 45.0))
                 } else {
                     let p = ((i - 1) / 2) as usize;
-                    let pos = make_new_target_pos(poss[p], tx, 40.0);
-                    fish.set_target_pos(pos);
+                    let radius = 10.0 + (self.relaxed as f32) * 10.0;
+                    fish.set_target_pos(make_new_target_pos(
+                        poss[p], -radius, radius, -radius, radius,
+                    ))
                 }
             }
             poss.push(fish.pos);
@@ -88,6 +84,12 @@ impl FishSwarm {
 
     pub fn draw<'d>(&self, mut d: RaylibDrawHandle<'d>) -> RaylibDrawHandle<'d> {
         self.fish_manager.draw(d)
+    }
+
+    pub fn in_last_sector(&mut self) -> bool {
+        self.fish_manager
+            .head()
+            .map_or(false, |fish| fish.pos.x >= (WINDOW_WIDTH as f32) * 0.75)
     }
 }
 
@@ -106,3 +108,15 @@ impl Entity for FishSwarm {
 }
 
 pub type FishSwarmManager = EntityManager<FishSwarm>;
+
+/*
+pub trait FishSwarmManagerEx {
+    fn in_last_sector(&self) -> bool;
+}
+
+impl FishSwarmManagerEx for FishSwarmManager {
+    fn in_last_sector(&self) -> bool {
+        return self.fish_manager.get(0).pos.x >= (WINDOW_WIDTH as f32) * 0.75;
+    }
+}
+*/

@@ -1,3 +1,4 @@
+use rand::Rng;
 use raylib::ffi::KeyboardKey::*;
 use raylib::prelude::*;
 
@@ -15,7 +16,6 @@ mod water;
 use bubbles::*;
 use bullet::*;
 use consts::*;
-use fish::*;
 use fish_swarm::*;
 use mine::*;
 use ship::*;
@@ -36,11 +36,6 @@ fn main() {
     let mut mine_manager = MineManager::new();
     let mut ship = Ship::new();
 
-    fish_swarm_manager.insert(FishSwarm::new(20, 0.0));
-    fish_swarm_manager.insert(FishSwarm::new(20, 300.0));
-    fish_swarm_manager.insert(FishSwarm::new(20, 600.0));
-    fish_swarm_manager.insert(FishSwarm::new(20, 900.0));
-
     while !rl.window_should_close() {
         let dt = rl.get_frame_time();
         arena_x -= dt * 100.0;
@@ -59,14 +54,20 @@ fn main() {
                 mine_manager.insert(Mine::new(surface_pos, &ship));
             }
         }
-        let mut new_swarms = 0;
+
+        let mut has_lead_fish_in_last_sector = false;
         fish_swarm_manager.update(|fish_swarm, _| {
             if fish_swarm.update(dt, &water.surface_verts) {
-                new_swarms += 1
+                // no fish in swarm
+            }
+            if fish_swarm.in_last_sector() {
+                has_lead_fish_in_last_sector = true;
             }
         });
-        for _ in 0..new_swarms {
-            fish_swarm_manager.insert(FishSwarm::new(20, 0.0));
+
+        if !has_lead_fish_in_last_sector {
+            let mut rng = rand::thread_rng();
+            fish_swarm_manager.insert(FishSwarm::new(rng.gen_range(10..30), rng.gen_range(0..9)));
         }
 
         bubbles_manager.update(|bubbles, _| bubbles.update(dt, &water.surface_verts));
